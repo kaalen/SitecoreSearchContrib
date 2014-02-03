@@ -1,13 +1,13 @@
 ﻿namespace scSearchContrib.Searcher.Parameters
 {
+    using System.Collections.Generic;
     using System.Linq;
 
     using Lucene.Net.Search;
 
-    using Sitecore.Data;
-    using Sitecore.StringExtensions;
-
     using scSearchContrib.Searcher.Utilities;
+
+    using Sitecore.Diagnostics;
     using Sitecore.Search;
 
     public class SearchParam : ISearchParam
@@ -77,54 +77,40 @@
         /// <returns>
         /// The <see cref="BooleanQuery"/>.
         /// </returns>
-        public virtual IQueryable<SkinnyItem> ProcessQuery(IQueryable<SkinnyItem> query, QueryOccurance condition, Index index)
+        public virtual Query ProcessQuery(QueryOccurance condition, Index index)
         {
-            if (!this.Database.IsNullOrEmpty())
+            Assert.ArgumentNotNull(index, "Index");
+
+            var translator = new QueryTranslator(index);
+            Assert.IsNotNull(translator, "Query Translator");
+
+            var templateFieldName = this.SearchBaseTemplates ? SearchFieldIDs.AllTemplates : BuiltinFields.Template;
+
+            var queries = new List<Query>
+                              {
+                                  QueryBuilder.BuildFullTextQuery(this.FullTextQuery, index),
+                                  QueryBuilder.BuildRelationFilter(this.RelatedIds),
+                                  QueryBuilder.BuildIdFilter(templateFieldName, this.TemplateIds),
+                                  QueryBuilder.BuildLocationFilter(this.LocationIds),
+                                  QueryBuilder.BuildFieldQuery(BuiltinFields.Database, this.Database),
+                                  QueryBuilder.BuildLanguageQuery(this.Language)
+                              }
+                              .Where(q => q != null)
+                              .ToList();
+
+            if (!queries.Any())
             {
-                query = query.Where(q => q.DatabaseName == this.Database);
+                return null;
             }
 
-            if (!this.Language.IsNullOrEmpty())
+            var occur = translator.GetOccur(condition);
+            var booleanQuery = new BooleanQuery();
+            foreach (var query in queries)
             {
-                query = query.Where(q => q.Language == this.Language);
+                booleanQuery.Add(query, occur);
             }
 
-            if (!this.FullTextQuery.IsNullOrEmpty())
-            {
-                query = query.Where(q => q.Content.Contains(this.FullTextQuery));
-            }
-
-            if (!this.TemplateIds.IsNullOrEmpty())
-            {
-                // Temp Limitation - only the first template id is taken into account
-                var templateId = IdHelper.ParseId(this.TemplateIds).Select(ID.Parse).FirstOrDefault();
-                query = query.Where(q => q.TemplateId == templateId);
-            }
-
-            if (!this.LocationIds.IsNullOrEmpty())
-            {
-                foreach (var id in IdHelper.ParseId(this.LocationIds).Select(ID.Parse))
-                {
-                    query = query.Where(q => q.Paths.Contains(id));
-                }
-            }
-
-            if (!this.LocationIds.IsNullOrEmpty())
-            {
-                foreach (var id in IdHelper.ParseId(this.LocationIds).Select(ID.Parse))
-                {
-                    query = query.Where(q => q.Paths.Contains(id));
-                }
-            }
-
-            if (!this.RelatedIds.IsNullOrEmpty())
-            {
-                // Temp Limitation - only the first related id is taken into account
-                var relatedId = IdHelper.ParseId(this.RelatedIds).Select(ID.Parse).FirstOrDefault();
-                query = query.Where(q => q.Links.Contains(relatedId));
-            }
-
-            return query;
+            return booleanQuery;
         }
     }
 }

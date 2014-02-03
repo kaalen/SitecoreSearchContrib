@@ -1,33 +1,20 @@
 ﻿namespace scSearchContrib.Searcher
 {
-    using System;
-    using System.ComponentModel;
     using System.Collections.Generic;
+    using System.Collections.Specialized;
     using System.Globalization;
 
     using Sitecore.Configuration;
     using Sitecore.Data;
     using Sitecore.Data.Items;
-    using Sitecore.ContentSearch;
-    using Sitecore.ContentSearch.Converters;
-    using Sitecore.ContentSearch.SearchTypes;
+    using Sitecore.Search;
 
     /// <summary>
     /// The skinny item.
     /// </summary>
     public class SkinnyItem
     {
-        /// <summary>
-        /// The fields.
-        /// </summary>
-        private readonly Dictionary<string, object> fields = new Dictionary<string, object>();
-
         #region Construction
-
-        public SkinnyItem()
-        {
-            
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SkinnyItem"/> class.
@@ -68,7 +55,11 @@
         /// </param>
         public SkinnyItem(ItemUri itemUri)
         {
+            this.Fields = new NameValueCollection();
+            this.RenderedFields = new List<string>();
             this.Uri = itemUri;
+            this.Fields.Add(BuiltinFields.Language, this.Uri.Language.Name);
+            this.Fields.Add(SearchFieldIDs.Version, this.Uri.Version.Number.ToString(CultureInfo.InvariantCulture));
         }
 
         #endregion
@@ -76,168 +67,100 @@
         /// <summary>
         /// Gets or sets the fields.
         /// </summary>
-        public Dictionary<string, object> Fields { get { return this.fields; } }
-
-        /// <summary>Gets the item id.</summary>
-        [IndexField(Sitecore.ContentSearch.BuiltinFields.Group)]
-        [TypeConverter(typeof(IndexFieldIDValueConverter))]
-        public virtual ID ItemID
-        {
-            get;
-            set;
-        }
+        public NameValueCollection Fields { get; set; }
 
         /// <summary>
-        /// Gets or sets the content.
+        /// Gets or sets the uri.
         /// </summary>
-        [IndexField(Sitecore.ContentSearch.BuiltinFields.Content)]
-        public virtual string Content
-        {
-            get;
-            set;
-        }
+        public ItemUri Uri { get; set; }
 
-        /// <summary>Gets the item id.</summary>
-        [IndexField(Sitecore.ContentSearch.BuiltinFields.Group)]
-        [TypeConverter(typeof(IndexFieldIDValueConverter))]
-        public virtual ID ItemId
-        {
-            get;
-            set;
-        }
+        /// <summary>
+        /// Gets or sets the rendered fields.
+        /// </summary>
+        public List<string> RenderedFields { get; set; }
 
-        /// <summary>Gets or sets the language.</summary>
-        [IndexField(Sitecore.ContentSearch.BuiltinFields.Language)]
-        public virtual string Language
-        {
-            get;
-            set;
-        }
-
-        /// <summary>Gets or sets the name.</summary>
-        [IndexField(Sitecore.ContentSearch.BuiltinFields.Name)]
-        public virtual string Name
-        {
-            get;
-            set;
-        }
-
-        /// <summary>Gets or sets the uri.</summary>
-        [IndexField(Sitecore.ContentSearch.BuiltinFields.UniqueId)]
-        [TypeConverter(typeof(IndexFieldItemUriValueConverter))]
-        public virtual ItemUri Uri { get; set; }
-
-        /// <summary>Gets or sets the version.</summary>
-        public virtual string Version
+        /// <summary>
+        /// Gets the item id.
+        /// </summary>
+        public string ItemID
         {
             get
             {
-                if (this.Uri == null)
-                {
-                    this.Uri = new ItemUri(this[Sitecore.ContentSearch.BuiltinFields.UniqueId]);
-                }
-
-                return this.Uri.Version.Number.ToString(CultureInfo.InvariantCulture);
-            }
-
-            set
-            {
+                return this.Uri.ItemID.ToString();
             }
         }
 
-        [IndexField(BuiltinFields.Database)]
-        public virtual string DatabaseName
+        /// <summary>
+        /// Gets the name.
+        /// </summary>
+        public string Name
         {
-            get;
-            set;
+            get
+            {
+                return this[BuiltinFields.Name];
+            }
+        }
+
+        /// <summary>
+        /// Gets the version.
+        /// </summary>
+        public string Version
+        {
+            get
+            {
+                return this.Uri.Version.Number.ToString(CultureInfo.InvariantCulture);
+            }
+        }
+
+        /// <summary>
+        /// Gets the language.
+        /// </summary>
+        public string Language
+        {
+            get
+            {
+                return this.Uri.Language.Name;
+            }
         }
 
         /// <summary>
         /// Gets the template name.
         /// </summary>
-        [IndexField(Sitecore.ContentSearch.BuiltinFields.TemplateName)]
         public string TemplateName
         {
-            get;
-            set;
-        }
-
-        /// <summary>Gets or sets the template id.</summary>
-        [IndexField(BuiltinFields.Template)]
-        [TypeConverter(typeof(IndexFieldIDValueConverter))]
-        public virtual ID TemplateId
-        {
-            get;
-            set;
-        }
-
-        [IndexField(BuiltinFields.Links)]
-        [TypeConverter(typeof(IndexFieldEnumerableConverter))]
-        public virtual IEnumerable<ID> Links
-        {
-            get;
-            set;
+            get
+            {
+                return this[SearchFieldIDs.TemplateName];
+            }
         }
 
         /// <summary>
         /// Gets the path.
-        /// </summary>]
-        [IndexField(Sitecore.ContentSearch.BuiltinFields.FullPath)]
-        public virtual string Path
-        {
-            get;
-            set;
-        }
-
-        [IndexField(BuiltinFields.Path)]
-        [TypeConverter(typeof(IndexFieldEnumerableConverter))]
-        public virtual IEnumerable<ID> Paths
-        {
-            get;
-            set;
-        }
-
-        public virtual string this[string key]
+        /// </summary>
+        public string Path
         {
             get
             {
-                if (key == null)
-                    throw new ArgumentNullException("key");
-
-                return this.fields[key.ToLowerInvariant()].ToString();
-            }
-
-            set
-            {
-                if (key == null)
-                    throw new ArgumentNullException("key");
-
-                this.fields[key.ToLowerInvariant()] = value;
+                return this[SearchFieldIDs.FullContentPath];
             }
         }
 
-        /// <summary>Gets the <see cref="System.String"/> with the specified key.</summary>
-        /// <param name="key">The key.</param>
-        /// <returns>The result.</returns>
-        public virtual object this[ObjectIndexerKey key]
+        /// <summary>
+        /// The this.
+        /// </summary>
+        /// <param name="field">
+        /// The field.
+        /// </param>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        public string this[string field]
         {
             get
             {
-                if (key == null)
-                    throw new ArgumentNullException("key");
-
-                return this.fields[key.ToString().ToLowerInvariant()];
-            }
-
-            set
-            {
-                if (key == null)
-                    throw new ArgumentNullException("key");
-
-                this.fields[key.ToString().ToLowerInvariant()] = value;
+                return this.Fields[field];
             }
         }
-
 
         #region Methods
 

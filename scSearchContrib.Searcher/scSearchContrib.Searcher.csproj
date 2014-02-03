@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -11,7 +11,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>scSearchContrib.Searcher</RootNamespace>
     <AssemblyName>scSearchContrib.Searcher</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Nonshipping>true</Nonshipping>
     <TargetFrameworkProfile />
@@ -40,12 +40,6 @@
       <HintPath>..\references\Lucene.Net.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Sitecore.ContentSearch">
-      <HintPath>..\references\Sitecore.ContentSearch.dll</HintPath>
-    </Reference>
-    <Reference Include="Sitecore.ContentSearch.Linq">
-      <HintPath>..\references\Sitecore.ContentSearch.Linq.dll</HintPath>
-    </Reference>
     <Reference Include="Sitecore.Kernel">
       <HintPath>..\references\Sitecore.Kernel.dll</HintPath>
       <Private>False</Private>
@@ -59,12 +53,21 @@
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Parameters\MultiSearchParam.cs" />
     <Compile Include="Parameters\ISearchParam.cs" />
+    <Compile Include="Parameters\DateRangeSearchParam.cs" />
     <Compile Include="Parameters\FieldSearchParam.cs" />
+    <Compile Include="Parameters\MultiFieldSearchParam.cs" />
+    <Compile Include="Parameters\NumericRangeSearchParam.cs" />
     <Compile Include="Parameters\SearchParam.cs" />
+    <Compile Include="QueryBuilder.cs" />
     <Compile Include="QueryRunner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\IdHelper.cs" />
+    <Compile Include="IndexConstants.cs" />
+    <Compile Include="Utilities\ItemUtil.cs" />
+    <Compile Include="Utilities\QueryTranslator.cs" />
+    <Compile Include="Utilities\SearchHelper.cs" />
     <Compile Include="SkinnyItem.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
