@@ -1,3 +1,4 @@
-<h1>Experimental branch with 7.0 compatibility samples</h1>
-This branch does not contain the 7.0 compatible version of the module.
-It simply shows how to convert the Searcher piece to ContentSearch Linq expressions 7.0.
+<h1>Branch with code that compiles agains Sitecore 7.0</h1>
+This branch contains code for the Crawler and Searcher projects which compiles against dlls shipped with Sitecore 7.0.
+No comprehensive testing has been done but the code appears to work (search results and all) 
+and as far as I remember I didn't have to modify assoicated config include files for custom search indexes.
